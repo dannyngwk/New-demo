@@ -7,6 +7,15 @@ import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import json
 
+# Plotly's "ols" trendline needs statsmodels. Detect it once so the dashboard
+# degrades gracefully (scatter without a regression line) instead of crashing
+# if the running environment is missing the package.
+try:
+    import statsmodels.api as _sm  # noqa: F401
+    TRENDLINE = "ols"
+except ImportError:
+    TRENDLINE = None
+
 # Page Configuration
 st.set_page_config(
     page_title="AWS APAC Sales Cycle Gap Analyzer",
@@ -497,7 +506,7 @@ with tab4:
         fig = px.scatter(filtered_df, x="enablement_score", y="win_probability",
                         color="country", size="deal_size_usd",
                         title="Enablement Score vs Win Probability",
-                        trendline="ols",
+                        trendline=TRENDLINE,
                         opacity=0.6)
         fig.update_layout(height=450)
         st.plotly_chart(fig, use_container_width=True)
