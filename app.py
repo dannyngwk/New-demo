@@ -224,6 +224,14 @@ filtered_df = df[
     (df["aws_service"].isin(selected_services))
 ]
 
+# Guard against empty selections so the dashboard never renders a broken view
+if filtered_df.empty:
+    st.warning(
+        "No opportunities match the current filters. "
+        "Select at least one Country, Industry, and AWS Service in the sidebar to continue."
+    )
+    st.stop()
+
 # ============================================================
 # MAIN DASHBOARD
 # ============================================================
@@ -497,8 +505,8 @@ with tab4:
     with col2:
         # Certification Impact
         cert_bins = pd.cut(filtered_df["certifications_held"], bins=[0, 2, 5, 8, 12], 
-                          labels=["0-2", "3-5", "6-8", "9-12"])
-        cert_impact = filtered_df.groupby(cert_bins).agg(
+                          labels=["0-2", "3-5", "6-8", "9-12"], include_lowest=True)
+        cert_impact = filtered_df.groupby(cert_bins, observed=True).agg(
             avg_deal_size=("deal_size_usd", "mean"),
             avg_win_rate=("win_probability", "mean"),
             count=("opportunity_id", "count")
